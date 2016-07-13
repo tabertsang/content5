@@ -1,0 +1,87 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+    http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context.xsd
+    http://www.springframework.org/schema/mvc
+    http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+	<!-- 配置springmvc -->
+	<!-- 1. 开启springmvc注解模式 -->
+	<mvc:annotation-driven />
+
+	<!-- 2. Servlet-mapping 映射的路径："/" -->
+	<mvc:default-servlet-handler />
+	
+	<!-- 配置图片文件上传路径 -->
+	<context:property-placeholder location="classpath:file.properties" />
+	
+	<!-- 注册拦截器 -->
+	<mvc:interceptors>
+	   <!-- 卖家拦截器 -->
+	   <mvc:interceptor>
+	       <mvc:mapping path="/public"/>
+	       <mvc:mapping path="/publicSubmit"/>
+	       <mvc:mapping path="/edit"/>
+	       <mvc:mapping path="/editSubmit"/>
+	       <mvc:mapping path="/api/delete"/>
+	       <mvc:mapping path="/api/upload"/>
+	       <bean class="org.joel.content.web.interceptor.SellerInterceptor" />
+	   </mvc:interceptor>
+	   <!-- 买家拦截器 -->
+       <mvc:interceptor>
+           <mvc:mapping path="/api/buy"/>
+           <mvc:mapping path="/settleAccount"/>
+           <mvc:mapping path="/account"/>
+           <bean class="org.joel.content.web.interceptor.BuyerInterceptor" />
+       </mvc:interceptor>
+	</mvc:interceptors>
+
+	<!-- 3. 配置ViewResolver -->
+	<!-- 配置ContentNegotiatingViewResolver -->
+	<bean id="freemarkerConfig"
+		class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
+		<property name="templateLoaderPath" value="/template" />
+		<property name="freemarkerSettings">
+		    <props>
+		        <prop key="classic_compatible">true</prop>
+		        <prop key="defaultEncoding">utf-8</prop>
+		    </props>
+		</property>
+	</bean>
+
+	<bean
+		class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+		<property name="viewResolvers">
+			<list>
+				<bean id="viewResolver"
+					class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">
+					<property name="cache" value="true" />
+					<property name="prefix" value="" />
+					<property name="suffix" value=".ftl" />
+					<property name="contentType" value="text/html;charset=utf-8"></property>
+				</bean>
+			</list>
+		</property>
+		<property name="defaultViews">
+			<list>
+				<bean
+					class="org.springframework.web.servlet.view.json.MappingJackson2JsonView" />
+			</list>
+		</property>
+	</bean>
+	
+	<!-- Related with file upload -->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="maxUploadSize" value="1000000" />
+        <property name="defaultEncoding" value="UTF-8" />
+        <property name="resolveLazily" value="true" />
+    </bean>
+
+
+	<!-- 4. 扫描web相关的bean -->
+	<context:component-scan base-package="org.joel.content.web" />
+</beans>
